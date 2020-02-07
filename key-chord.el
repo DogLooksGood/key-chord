@@ -9,7 +9,7 @@
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation; either version 2 of
 ;; the License, or (at your option) any later version.
-;;
+ ;;
 ;; This program is distributed in the hope that it will be
 ;; useful, but WITHOUT ANY WARRANTY; without even the implied
 ;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -83,7 +83,7 @@
 ;; `4' and `r' pressed together insert a dollar sign.
 ;;
 ;; A ONE-key chord is a single key quickly pressed twice (within one third
-;; of a second or so). 
+;; of a second or so).
 ;;
 ;; Examples:
 ;;
@@ -114,7 +114,7 @@
 ;; write. Otherwise, if you are typing fast, two key intended to be separate
 ;; letters might instead trig a chord.
 ;; E.g. "uu" would be a good chord in spanish but not in finnish, and
-;; "hj" would be a good chord in english but not in swedish. 
+;; "hj" would be a good chord in english but not in swedish.
 ;;
 ;; Don't rely solely on /usr/dict/words to find unusual combination.
 ;; For example "cv" or "fg" can be quite common in certain kinds of
@@ -197,6 +197,9 @@
 ;;      First release
 
 ;;; Code:
+
+(defvar key-chord-key-name 'key-chord
+  "The name used for key code.")
 
 (defvar key-chord-two-keys-delay 0.1	; 0.05 or 0.1
   "Max time delay between two key press to be considered a key chord.")
@@ -292,10 +295,10 @@ If COMMAND is nil, the key-chord is removed."
   (let ((key1 (logand 255 (aref keys 0)))
 	(key2 (logand 255 (aref keys 1))))
     (if (eq key1 key2)
-	(define-key keymap (vector 'key-chord key1 key2) command)
+	(define-key keymap (vector key-chord-key-name key1 key2) command)
       ;; else
-      (define-key keymap (vector 'key-chord key1 key2) command)
-      (define-key keymap (vector 'key-chord key2 key1) command))))
+      (define-key keymap (vector key-chord-key-name key1 key2) command)
+      (define-key keymap (vector key-chord-key-name key2 key1) command))))
 
 (defun key-chord-lookup-key1 (keymap key)
   "Like lookup-key but no third arg and no numeric return value."
@@ -313,7 +316,7 @@ If COMMAND is nil, the key-chord is removed."
       (setq res (key-chord-lookup-key1 (car maps) key)
 	    maps (cdr maps)))
     (or res
-	(if (current-local-map) 
+	(if (current-local-map)
 	    (key-chord-lookup-key1 (current-local-map) key))
 	(key-chord-lookup-key1 (current-global-map) key))))
 
@@ -327,8 +330,8 @@ Please ignore that."
 (defun key-chord-input-method (first-char)
   "Input method controlled by key bindings with the prefix `key-chord'."
   (if (and (not (eq first-char key-chord-last-unmatched))
-	   (key-chord-lookup-key (vector 'key-chord first-char)))
-      (let ((delay (if (key-chord-lookup-key (vector 'key-chord first-char first-char))
+	   (key-chord-lookup-key (vector key-chord-key-name first-char)))
+      (let ((delay (if (key-chord-lookup-key (vector key-chord-key-name first-char first-char))
 		       key-chord-one-key-delay
 		     ;; else
 		     key-chord-two-keys-delay)))
@@ -344,12 +347,12 @@ Please ignore that."
 	  ;; else input-pending-p
 	  (let* ((input-method-function nil)
 		 (next-char (read-event))
-		 (res (vector 'key-chord first-char next-char)))
+		 (res (vector key-chord-key-name first-char next-char)))
 	    (if (key-chord-lookup-key res)
 		(progn
 		  (setq key-chord-defining-kbd-macro
 			(cons first-char key-chord-defining-kbd-macro))
-		  (list 'key-chord first-char next-char))
+		  (list key-chord-key-name first-char next-char))
 	      ;; else put back next-char and return first-char
 	      (setq unread-command-events (cons next-char unread-command-events))
 	      (if (eq first-char next-char)
